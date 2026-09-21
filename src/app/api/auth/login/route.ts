@@ -13,7 +13,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const db = getDb();
+    const db = await getDb();
     const cleanUsername = username.trim().toLowerCase();
     const passwordHash = hashPassword(password);
 
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
 
     // Update last login
     user.lastLogin = new Date().toISOString();
-    saveDb(db);
+    await saveDb(db);
 
     const token = generateToken(user);
     await setAuthCookie(token);

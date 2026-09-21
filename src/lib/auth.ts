@@ -55,7 +55,7 @@ export async function getCurrentUser(): Promise<User | null> {
   const payload = verifyToken(token);
   if (!payload) return null;
 
-  const db = getDb();
+  const db = await getDb();
   const user = db.users.find((u) => u.id === payload.id && u.status === "active");
   return user || null;
 }

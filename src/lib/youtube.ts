@@ -5,7 +5,7 @@ export const YOUTUBE_CHANNEL_ID = "UCHDYwjtQts079W2mwqcVFwA";
 export const YOUTUBE_FEED_URL = `https://www.youtube.com/feeds/videos.xml?channel_id=${YOUTUBE_CHANNEL_ID}`;
 
 export async function fetchYouTubeLessons(force = false): Promise<Lesson[]> {
-  const db = getDb();
+  const db = await getDb();
   const now = Date.now();
 
   // If synced within last 60 seconds and not forced, return cached lessons
@@ -119,7 +119,7 @@ export async function fetchYouTubeLessons(force = false): Promise<Lesson[]> {
     }
 
     db.lastSync = new Date().toISOString();
-    saveDb(db);
+    await saveDb(db);
 
     return db.lessons;
   } catch (error) {

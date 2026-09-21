@@ -9,7 +9,7 @@ export async function GET() {
     return NextResponse.json({ error: "Ruxsat berilmagan" }, { status: 403 });
   }
 
-  const db = getDb();
+  const db = await getDb();
   const students = db.users.filter((u) => u.role === "student");
   const activeStudents = students.filter((u) => u.status === "active");
   const lessons = await fetchYouTubeLessons(false);

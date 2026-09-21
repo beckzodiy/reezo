@@ -14,7 +14,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Dars ID talab qilinadi" }, { status: 400 });
     }
 
-    const db = getDb();
+    const db = await getDb();
     const user = db.users.find((u) => u.id === currentUser.id);
 
     if (!user) {
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
       user.completedLessons = user.completedLessons.filter((id) => id !== lessonId);
     }
 
-    saveDb(db);
+    await saveDb(db);
 
     return NextResponse.json({
       success: true,

@@ -11,7 +11,7 @@ export async function POST() {
 
   try {
     const lessons = await fetchYouTubeLessons(true); // Force sync from YouTube
-    const db = getDb();
+    const db = await getDb();
     return NextResponse.json({
       success: true,
       message: "YouTube (@MilliySfera) kanalidan darslar muvaffaqiyatli sinxronlandi!",

@@ -48,7 +48,11 @@ const DB_PATH = path.join(process.cwd(), "data", "db.json");
 function ensureDbExists(): DatabaseSchema {
   const dir = path.dirname(DB_PATH);
   if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
+    try {
+      fs.mkdirSync(dir, { recursive: true });
+    } catch {
+      // Ignored in read-only environments
+    }
   }
 
   if (!fs.existsSync(DB_PATH)) {
@@ -76,10 +80,31 @@ function ensureDbExists(): DatabaseSchema {
           completedLessons: [],
         },
       ],
-      lessons: [],
-      lastSync: undefined,
+      lessons: [
+        {
+          id: "yt-ZI1frF9EpN8",
+          postId: "ZI1frF9EpN8",
+          messageId: 1,
+          videoId: "ZI1frF9EpN8",
+          title: "Qo'rquvni qo'rqitish mumkinmi? @toplesofficial",
+          description: "#Qorquv #Qorquvniqorqitish #Milliysfera #Arvohlar #horror #Milliykontent",
+          thumbSrc: "https://i3.ytimg.com/vi/ZI1frF9EpN8/hqdefault.jpg",
+          duration: "15:00",
+          views: "258+",
+          publishedAt: "2024-04-20T11:59:51+00:00",
+          youtubeUrl: "https://www.youtube.com/watch?v=ZI1frF9EpN8",
+          embedUrl: "https://www.youtube-nocookie.com/embed/ZI1frF9EpN8?autoplay=0&rel=0&modestbranding=1",
+          order: 1,
+        },
+      ],
+      lastSync: new Date().toISOString(),
     };
-    fs.writeFileSync(DB_PATH, JSON.stringify(initialDb, null, 2), "utf-8");
+
+    try {
+      fs.writeFileSync(DB_PATH, JSON.stringify(initialDb, null, 2), "utf-8");
+    } catch {
+      // Ignored if read-only
+    }
     return initialDb;
   }
 
@@ -98,7 +123,15 @@ export function getDb(): DatabaseSchema {
 export function saveDb(data: DatabaseSchema): void {
   const dir = path.dirname(DB_PATH);
   if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
+    try {
+      fs.mkdirSync(dir, { recursive: true });
+    } catch {
+      // Ignore
+    }
   }
-  fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2), "utf-8");
+  try {
+    fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2), "utf-8");
+  } catch {
+    // Ignore in serverless edge
+  }
 }

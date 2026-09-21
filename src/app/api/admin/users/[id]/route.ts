@@ -15,7 +15,7 @@ export async function PUT(
     const { id } = params;
     const { name, phone, course, notes, status, password } = await request.json();
 
-    const db = getDb();
+    const db = await getDb();
     const userIndex = db.users.findIndex((u) => u.id === id);
 
     if (userIndex === -1) {
@@ -38,7 +38,7 @@ export async function PUT(
       user.plainPassword = password;
     }
 
-    saveDb(db);
+    await saveDb(db);
 
     return NextResponse.json({
       success: true,
@@ -72,7 +72,7 @@ export async function DELETE(
 
   try {
     const { id } = params;
-    const db = getDb();
+    const db = await getDb();
 
     // Prevent deleting the main admin
     if (id === "admin-1") {
@@ -92,7 +92,7 @@ export async function DELETE(
       );
     }
 
-    saveDb(db);
+    await saveDb(db);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Delete user error:", error);

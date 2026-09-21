@@ -8,7 +8,7 @@ export async function GET() {
     return NextResponse.json({ error: "Ruxsat berilmagan" }, { status: 403 });
   }
 
-  const db = getDb();
+  const db = await getDb();
   // Return users with passwords visible for admin to copy credentials
   return NextResponse.json({
     users: db.users.map((u) => ({
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const db = getDb();
+    const db = await getDb();
     const cleanUsername = username.trim().toLowerCase();
 
     // Check if username already exists
@@ -72,7 +72,7 @@ export async function POST(request: Request) {
     };
 
     db.users.push(newUser);
-    saveDb(db);
+    await saveDb(db);
 
     return NextResponse.json({
       success: true,

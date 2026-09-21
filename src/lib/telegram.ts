@@ -1,7 +1,7 @@
 import { getDb, saveDb, Lesson } from "./db";
 
 export async function fetchTelegramLessons(force = false): Promise<Lesson[]> {
-  const db = getDb();
+  const db = await getDb();
   const now = Date.now();
 
   // If synced within last 60 seconds and not forced, return cached lessons
@@ -198,7 +198,7 @@ export async function fetchTelegramLessons(force = false): Promise<Lesson[]> {
     }
 
     db.lastTelegramSync = new Date().toISOString();
-    saveDb(db);
+    await saveDb(db);
 
     return db.lessons;
   } catch (error) {

@@ -5,3 +5,8 @@ pages_build_output_dir = ".next"
 
 [vars]
 NEXT_PUBLIC_APP_NAME = "Qooduq"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "qooduq-db"
+database_id = "d41eac64-446a-4ffa-bb68-ce2a6e6019b9"
