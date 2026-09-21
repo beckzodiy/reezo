@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getDb, saveDb, User } from "@/lib/db";
 import { getCurrentUser, hashPassword } from "@/lib/auth";
 
+export const runtime = "edge";
+
 export async function GET() {
   const currentUser = await getCurrentUser();
   if (!currentUser || currentUser.role !== "admin") {

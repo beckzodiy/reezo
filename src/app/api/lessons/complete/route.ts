@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { getDb, saveDb } from "@/lib/db";
 
+export const runtime = "edge";
+
 export async function POST(request: Request) {
   const currentUser = await getCurrentUser();
   if (!currentUser) {

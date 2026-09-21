@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getDb, saveDb } from "@/lib/db";
 import { getCurrentUser, hashPassword } from "@/lib/auth";
 
+export const runtime = "edge";
+
 export async function PUT(
   request: Request,
   { params }: { params: { id: string } }

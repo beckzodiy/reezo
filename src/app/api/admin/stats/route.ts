@@ -3,6 +3,8 @@ import { getCurrentUser } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { fetchYouTubeLessons, YOUTUBE_CHANNEL_URL } from "@/lib/youtube";
 
+export const runtime = "edge";
+
 export async function GET() {
   const currentUser = await getCurrentUser();
   if (!currentUser || currentUser.role !== "admin") {

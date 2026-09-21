@@ -1,16 +1,13 @@
-import crypto from "crypto";
 import { cookies } from "next/headers";
 import { getDb, User } from "./db";
+import { hashSha256, createHmacSha256, toBase64, fromBase64 } from "./crypto";
 
 const SALT = "qooduq_secret_salt";
 const JWT_SECRET = "qooduq_super_secure_jwt_token_2026";
 const COOKIE_NAME = "qooduq_auth_token";
 
 export function hashPassword(password: string): string {
-  return crypto
-    .createHash("sha256")
-    .update(password + SALT)
-    .digest("hex");
+  return hashSha256(password + SALT);
 }
 
 export function generateToken(user: User): string {
@@ -22,11 +19,8 @@ export function generateToken(user: User): string {
     timestamp: Date.now(),
   };
   const str = JSON.stringify(payload);
-  const signature = crypto
-    .createHmac("sha256", JWT_SECRET)
-    .update(str)
-    .digest("hex");
-  return Buffer.from(str).toString("base64") + "." + signature;
+  const signature = createHmacSha256(str, JWT_SECRET);
+  return toBase64(str) + "." + signature;
 }
 
 export function verifyToken(token: string): { id: string; username: string; role: string; name: string } | null {
@@ -34,11 +28,8 @@ export function verifyToken(token: string): { id: string; username: string; role
     const parts = token.split(".");
     if (parts.length !== 2) return null;
     const [payloadB64, signature] = parts;
-    const str = Buffer.from(payloadB64, "base64").toString("utf-8");
-    const expectedSig = crypto
-      .createHmac("sha256", JWT_SECRET)
-      .update(str)
-      .digest("hex");
+    const str = fromBase64(payloadB64);
+    const expectedSig = createHmacSha256(str, JWT_SECRET);
 
     if (signature !== expectedSig) return null;
     return JSON.parse(str);

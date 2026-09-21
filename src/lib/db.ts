@@ -1,6 +1,4 @@
-import fs from "fs";
-import path from "path";
-import crypto from "crypto";
+import { hashSha256 } from "./crypto";
 
 export interface User {
   id: string;
@@ -43,95 +41,117 @@ export interface DatabaseSchema {
   lastTelegramSync?: string;
 }
 
-const DB_PATH = path.join(process.cwd(), "data", "db.json");
+const salt = "qooduq_secret_salt";
+const defaultPassword = "adminpassword";
+const defaultPasswordHash = hashSha256(defaultPassword + salt);
 
-function ensureDbExists(): DatabaseSchema {
-  const dir = path.dirname(DB_PATH);
-  if (!fs.existsSync(dir)) {
-    try {
-      fs.mkdirSync(dir, { recursive: true });
-    } catch {
-      // Ignored in read-only environments
-    }
-  }
+const memoryDb: DatabaseSchema = {
+  users: [
+    {
+      id: "admin-1",
+      username: "admin",
+      passwordHash: defaultPasswordHash,
+      plainPassword: defaultPassword,
+      name: "Bosh Administrator",
+      phone: "+998 77 028 0039",
+      role: "admin",
+      status: "active",
+      course: "Barcha kurslar",
+      notes: "Tizim asosiy administratori",
+      createdAt: new Date().toISOString(),
+      completedLessons: [],
+    },
+  ],
+  lessons: [
+    {
+      id: "yt-ZI1frF9EpN8",
+      postId: "ZI1frF9EpN8",
+      messageId: 1,
+      videoId: "ZI1frF9EpN8",
+      title: "Qo'rquvni qo'rqitish mumkinmi? @toplesofficial",
+      description: "#Qorquv #Qorquvniqorqitish #Milliysfera #Arvohlar #horror #Milliykontent",
+      thumbSrc: "https://i3.ytimg.com/vi/ZI1frF9EpN8/hqdefault.jpg",
+      duration: "15:00",
+      views: "258+",
+      publishedAt: "2024-04-20T11:59:51+00:00",
+      youtubeUrl: "https://www.youtube.com/watch?v=ZI1frF9EpN8",
+      embedUrl: "https://www.youtube-nocookie.com/embed/ZI1frF9EpN8?autoplay=0&rel=0&modestbranding=1",
+      order: 1,
+    },
+  ],
+  lastSync: new Date().toISOString(),
+};
 
-  if (!fs.existsSync(DB_PATH)) {
-    const salt = "qooduq_secret_salt";
-    const defaultPassword = "adminpassword";
-    const passwordHash = crypto
-      .createHash("sha256")
-      .update(defaultPassword + salt)
-      .digest("hex");
-
-    const initialDb: DatabaseSchema = {
-      users: [
-        {
-          id: "admin-1",
-          username: "admin",
-          passwordHash,
-          plainPassword: defaultPassword,
-          name: "Bosh Administrator",
-          phone: "+998 77 028 0039",
-          role: "admin",
-          status: "active",
-          course: "Barcha kurslar",
-          notes: "Tizim asosiy administratori",
-          createdAt: new Date().toISOString(),
-          completedLessons: [],
-        },
-      ],
-      lessons: [
-        {
-          id: "yt-ZI1frF9EpN8",
-          postId: "ZI1frF9EpN8",
-          messageId: 1,
-          videoId: "ZI1frF9EpN8",
-          title: "Qo'rquvni qo'rqitish mumkinmi? @toplesofficial",
-          description: "#Qorquv #Qorquvniqorqitish #Milliysfera #Arvohlar #horror #Milliykontent",
-          thumbSrc: "https://i3.ytimg.com/vi/ZI1frF9EpN8/hqdefault.jpg",
-          duration: "15:00",
-          views: "258+",
-          publishedAt: "2024-04-20T11:59:51+00:00",
-          youtubeUrl: "https://www.youtube.com/watch?v=ZI1frF9EpN8",
-          embedUrl: "https://www.youtube-nocookie.com/embed/ZI1frF9EpN8?autoplay=0&rel=0&modestbranding=1",
-          order: 1,
-        },
-      ],
-      lastSync: new Date().toISOString(),
-    };
-
-    try {
-      fs.writeFileSync(DB_PATH, JSON.stringify(initialDb, null, 2), "utf-8");
-    } catch {
-      // Ignored if read-only
-    }
-    return initialDb;
-  }
-
+function getFs() {
   try {
-    const raw = fs.readFileSync(DB_PATH, "utf-8");
-    return JSON.parse(raw);
+    return eval("require('fs')");
   } catch {
-    return { users: [], lessons: [] };
+    return null;
+  }
+}
+
+function getPath() {
+  try {
+    return eval("require('path')");
+  } catch {
+    return null;
   }
 }
 
 export function getDb(): DatabaseSchema {
-  return ensureDbExists();
+  const fsModule = getFs();
+  const pathModule = getPath();
+
+  if (!fsModule || !pathModule) {
+    return memoryDb;
+  }
+
+  try {
+    const DB_PATH = pathModule.join(process.cwd(), "data", "db.json");
+    const dir = pathModule.dirname(DB_PATH);
+    if (!fsModule.existsSync(dir)) {
+      try {
+        fsModule.mkdirSync(dir, { recursive: true });
+      } catch {
+        // Ignored
+      }
+    }
+
+    if (!fsModule.existsSync(DB_PATH)) {
+      try {
+        fsModule.writeFileSync(DB_PATH, JSON.stringify(memoryDb, null, 2), "utf-8");
+      } catch {
+        // Ignored
+      }
+      return memoryDb;
+    }
+
+    const raw = fsModule.readFileSync(DB_PATH, "utf-8");
+    const parsed = JSON.parse(raw);
+    return parsed;
+  } catch {
+    return memoryDb;
+  }
 }
 
 export function saveDb(data: DatabaseSchema): void {
-  const dir = path.dirname(DB_PATH);
-  if (!fs.existsSync(dir)) {
-    try {
-      fs.mkdirSync(dir, { recursive: true });
-    } catch {
-      // Ignore
-    }
-  }
+  memoryDb.users = data.users;
+  memoryDb.lessons = data.lessons;
+  memoryDb.lastSync = data.lastSync;
+  memoryDb.lastTelegramSync = data.lastTelegramSync;
+
+  const fsModule = getFs();
+  const pathModule = getPath();
+  if (!fsModule || !pathModule) return;
+
   try {
-    fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2), "utf-8");
+    const DB_PATH = pathModule.join(process.cwd(), "data", "db.json");
+    const dir = pathModule.dirname(DB_PATH);
+    if (!fsModule.existsSync(dir)) {
+      fsModule.mkdirSync(dir, { recursive: true });
+    }
+    fsModule.writeFileSync(DB_PATH, JSON.stringify(data, null, 2), "utf-8");
   } catch {
-    // Ignore in serverless edge
+    // Ignore in edge
   }
 }
